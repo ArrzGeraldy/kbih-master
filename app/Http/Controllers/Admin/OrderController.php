@@ -7,11 +7,15 @@ use App\Models\Order;
 use App\Models\Pembayaran;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Midtrans\Config as MidtransConfig;
 use Midtrans\Snap;
+use App\Models\KelasBimbingan;
+use App\Models\OrderBimbinganDetail;
+use App\Models\OrderUmrohDetail;
 
 class OrderController extends Controller
 {
@@ -110,6 +114,10 @@ class OrderController extends Controller
         $dpAlreadyPaid = $dpAmount > 0 ? ((int) $order->total_dibayar >= $dpAmount) : false;
         $canPayDp = $dokumenVerified && !$dpAlreadyPaid && in_array((string) $order->status, ['draft', 'pending'], true);
 
+        $totalTagihan = (int) ($order->total_tagihan ?? 0);
+        $totalDibayar = (int) ($order->total_dibayar ?? 0);
+        $sisaTagihan = max(0, $totalTagihan - $totalDibayar);
+
         $midtransClientKey = (string) env('MIDTRANS_CLIENT_KEY', '');
         $midtransSnapUrl = (bool) env('MIDTRANS_IS_PRODUCTION', false)
             ? 'https://app.midtrans.com/snap/snap.js'
@@ -122,6 +130,9 @@ class OrderController extends Controller
             'dokumenVerified',
             'dpAlreadyPaid',
             'canPayDp',
+            'totalTagihan',
+            'totalDibayar',
+            'sisaTagihan',
             'midtransClientKey',
             'midtransSnapUrl'
         ));
@@ -268,6 +279,9 @@ class OrderController extends Controller
             'total_dibayar' => ((int) $order->total_dibayar) + ((int) $pembayaran->jumlah),
         ]);
 
+        // reload order to get latest totals
+        $order->refresh();
+
         $dpAmount = $this->calculateDpAmount($order);
         if ($dpAmount > 0 && (int) $order->total_dibayar >= $dpAmount) {
             if (in_array((string) $order->status, ['draft', 'pending'], true)) {
@@ -275,10 +289,134 @@ class OrderController extends Controller
             }
         }
 
+        // If order is fully paid after this pembayaran, set status done and assign kelas bimbingan
+        if ((int) $order->total_dibayar === (int) $order->harga_snapshot) {
+            $kelasBimbinganId = KelasBimbingan::query()
+                ->where('paket_id', $order->paket_id)
+                ->where('mulai_periode', '<=', Carbon::create(now()->year, 8, 1)->toDateString())
+                ->orderBy('mulai_periode')
+                ->value('id');
+
+            if ($kelasBimbinganId) {
+                $order->load(['paket', 'orderBimbinganDetail', 'orderUmrohDetail']);
+
+                if (optional($order->paket)->type === 'BIMBINGAN_HAJI') {
+                    if ($order->orderBimbinganDetail) {
+                        $order->orderBimbinganDetail()->update(['kelas_bimbingan_id' => $kelasBimbinganId]);
+                    }
+                } elseif (optional($order->paket)->type === 'UMROH') {
+                    if ($order->orderUmrohDetail) {
+                        $order->orderUmrohDetail()->update(['kelas_bimbingan_id' => $kelasBimbinganId]);
+                    } else {
+                        OrderUmrohDetail::create([
+                            'order_id' => $order->id,
+                            'kelas_bimbingan_id' => $kelasBimbinganId,
+                            'tanggal_keberangkatan' => null,
+                        ]);
+                    }
+                }
+
+                // mark order done if not already
+                if ((string) $order->status !== 'done') {
+                    $order->update(['status' => 'done']);
+                }
+            }
+        }
+
         return response()->json([
             'message' => 'Pembayaran DP berhasil dicatat.',
             'order_status' => (string) $order->status,
         ]);
+    }
+
+    public function editBimbingan(Order $order): View
+    {
+        $order->load(['paket', 'orderBimbinganDetail']);
+
+        $kelasBimbingans = KelasBimbingan::query()
+            ->where('paket_id', $order->paket_id)
+            ->orderBy('mulai_periode')
+            ->get();
+
+        return view('admin.order.edit-bimbingan', compact('order', 'kelasBimbingans'));
+    }
+
+    public function updateBimbingan(Request $request, Order $order): RedirectResponse
+    {
+        if (optional($order->paket)->type !== 'BIMBINGAN_HAJI') {
+            return redirect()->route('admin.orders.show', $order)
+                ->with('error', 'Order ini bukan paket Bimbingan Haji.');
+        }
+
+        $validated = $request->validate([
+            'nomor_porsi' => ['required', 'string', 'max:255'],
+            'kelas_bimbingan_id' => ['required', 'integer', 'exists:kelas_bimbingans,id'],
+        ]);
+
+        $kelasBimbingan = KelasBimbingan::query()
+            ->where('paket_id', $order->paket_id)
+            ->whereKey($validated['kelas_bimbingan_id'])
+            ->first();
+
+        if (! $kelasBimbingan) {
+            return redirect()->back()->withInput()->withErrors(['kelas_bimbingan_id' => 'Kelas bimbingan tidak valid untuk paket ini.']);
+        }
+
+        $order->orderBimbinganDetail()->updateOrCreate(
+            ['order_id' => $order->id],
+            [
+                'nomor_porsi' => $validated['nomor_porsi'],
+                'kelas_bimbingan_id' => $kelasBimbingan->id,
+            ]
+        );
+
+        return redirect()->route('admin.orders.index', $order)
+            ->with('success', 'Detail bimbingan berhasil diperbarui.');
+    }
+
+    public function editUmroh(Order $order): View
+    {
+        $order->load(['paket', 'orderUmrohDetail']);
+
+        $kelasBimbingans = KelasBimbingan::query()
+            ->where('paket_id', $order->paket_id)
+            ->orderBy('mulai_periode')
+            ->get();
+
+        return view('admin.order.edit-umroh', compact('order', 'kelasBimbingans'));
+    }
+
+    public function updateUmroh(Request $request, Order $order): RedirectResponse
+    {
+        if (optional($order->paket)->type !== 'UMROH') {
+            return redirect()->route('admin.orders.show', $order)
+                ->with('error', 'Order ini bukan paket Umroh.');
+        }
+
+        $validated = $request->validate([
+            'tanggal_keberangkatan' => ['nullable', 'date'],
+            'kelas_bimbingan_id' => ['required', 'integer', 'exists:kelas_bimbingans,id'],
+        ]);
+
+        $kelasBimbingan = KelasBimbingan::query()
+            ->where('paket_id', $order->paket_id)
+            ->whereKey($validated['kelas_bimbingan_id'])
+            ->first();
+
+        if (! $kelasBimbingan) {
+            return redirect()->back()->withInput()->withErrors(['kelas_bimbingan_id' => 'Kelas bimbingan tidak valid untuk paket ini.']);
+        }
+
+        $order->orderUmrohDetail()->updateOrCreate(
+            ['order_id' => $order->id],
+            [
+                'tanggal_keberangkatan' => $validated['tanggal_keberangkatan'],
+                'kelas_bimbingan_id' => $kelasBimbingan->id,
+            ]
+        );
+
+        return redirect()->route('admin.orders.index', $order)
+            ->with('success', 'Detail Umroh berhasil diperbarui.');
     }
 
     private function configureMidtrans(): void

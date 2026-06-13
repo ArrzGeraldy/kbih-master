@@ -51,13 +51,5 @@
       >Kelas</a>
     </nav>
 
-        <div class="p-3 mt-auto">
-          <div class="rounded-lg bg-green-800/60 p-3">
-            <div class="text-xs text-green-100">Login sebagai</div>
-            {{-- <div class="text-sm font-medium">{{ $adminName }}</div> --}}
-          </div>
-        </div>
+        
       </aside>
-
-            <!-- overlay (mobile) -->
-      <div id="sidebarOverlay" class="fixed inset-0 bg-black/40 z-10 hidden lg:hidden"></div>

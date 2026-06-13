@@ -35,7 +35,7 @@
           <x-flash-message />
 
           <div class="max-w-6xl">
-            <div class="flex items-start justify-between gap-4 mb-6">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-6">
               <div>
                 <h2 class="text-xl font-semibold text-gray-900">
                   Detail Order #{{ $order->id }}
@@ -45,12 +45,29 @@
                 </p>
               </div>
 
-              <a
-                href="{{ route('admin.orders.index') }}"
-                class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Kembali
-              </a>
+              <div class="flex flex-wrap items-center gap-3">
+                @if (optional($order->paket)->type === 'BIMBINGAN_HAJI')
+                  <a
+                    href="{{ route('admin.orders.edit-bimbingan', $order) }}"
+                    class="inline-flex items-center rounded-md bg-green-900 px-4 py-2 text-sm font-medium text-white hover:bg-green-800"
+                  >
+                    Edit Bimbingan
+                  </a>
+                @elseif (optional($order->paket)->type === 'UMROH')
+                  <a
+                    href="{{ route('admin.orders.edit-umroh', $order) }}"
+                    class="inline-flex items-center rounded-md bg-green-900 px-4 py-2 text-sm font-medium text-white hover:bg-green-800"
+                  >
+                    Edit Umroh
+                  </a>
+                @endif
+                <a
+                  href="{{ route('admin.orders.index') }}"
+                  class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Kembali
+                </a>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -61,8 +78,20 @@
                   <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <div class="text-sm text-gray-600">Status</div>
-                      <div class="mt-1 font-medium text-gray-900">
-                        {{ strtoupper($order->status) }}
+                      <div class="mt-1">
+                        @php
+                          $statusBadge = match ($order->status) {
+                            'draft' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'ring' => 'ring-gray-200'],
+                            'pending' => ['bg' => 'bg-yellow-50', 'text' => 'text-yellow-900', 'ring' => 'ring-yellow-200'],
+                            'active' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-900', 'ring' => 'ring-blue-200'],
+                            'done' => ['bg' => 'bg-green-50', 'text' => 'text-green-900', 'ring' => 'ring-green-200'],
+                            'cancel' => ['bg' => 'bg-red-50', 'text' => 'text-red-900', 'ring' => 'ring-red-200'],
+                            default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'ring' => 'ring-gray-200'],
+                          };
+                        @endphp
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $statusBadge['bg'] }} {{ $statusBadge['text'] }} ring-1 ring-inset {{ $statusBadge['ring'] }}">
+                          {{ strtoupper($order->status) }}
+                        </span>
                       </div>
                     </div>
                     <div>
@@ -106,8 +135,15 @@
                     </div>
                     <div>
                       <div class="text-sm text-gray-600">Jenis Kelamin</div>
-                      <div class="mt-1 font-medium text-gray-900">
-                        {{ optional($order->jamaah)->jenis_kelamin ?? '-' }}
+                      <div class="mt-1">
+                        @php
+                          $genderBadge = (optional($order->jamaah)->jenis_kelamin === 'L') 
+                            ? ['bg' => 'bg-blue-50', 'text' => 'text-blue-900', 'ring' => 'ring-blue-200', 'label' => 'Laki-laki']
+                            : ['bg' => 'bg-pink-50', 'text' => 'text-pink-900', 'ring' => 'ring-pink-200', 'label' => 'Perempuan'];
+                        @endphp
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $genderBadge['bg'] }} {{ $genderBadge['text'] }} ring-1 ring-inset {{ $genderBadge['ring'] }}">
+                          {{ $genderBadge['label'] ?? '-' }}
+                        </span>
                       </div>
                     </div>
                     <div>
@@ -127,8 +163,18 @@
                     </div>
                     <div>
                       <div class="text-sm text-gray-600">Status Jamaah</div>
-                      <div class="mt-1 font-medium text-gray-900">
-                        {{ optional($order->jamaah)->status ?? '-' }}
+                      <div class="mt-1">
+                        @php
+                          $jamaahStatusBadge = match (optional($order->jamaah)->status) {
+                            'aktif' => ['bg' => 'bg-green-50', 'text' => 'text-green-900', 'ring' => 'ring-green-200'],
+                            'nonaktif' => ['bg' => 'bg-red-50', 'text' => 'text-red-900', 'ring' => 'ring-red-200'],
+                            'proses' => ['bg' => 'bg-yellow-50', 'text' => 'text-yellow-900', 'ring' => 'ring-yellow-200'],
+                            default => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'ring' => 'ring-gray-200'],
+                          };
+                        @endphp
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $jamaahStatusBadge['bg'] }} {{ $jamaahStatusBadge['text'] }} ring-1 ring-inset {{ $jamaahStatusBadge['ring'] }}">
+                          {{ optional($order->jamaah)->status ?? '-' }}
+                        </span>
                       </div>
                     </div>
                     <div class="md:col-span-2">
@@ -295,8 +341,15 @@
                   </div>
                   <div class="mt-4">
                     <div class="text-sm text-gray-600">Tipe</div>
-                    <div class="mt-1 font-medium text-gray-900">
-                      {{ optional($order->paket)->type ?? '-' }}
+                    <div class="mt-1">
+                      @php
+                        $typeBadge = (optional($order->paket)->type === 'BIMBINGAN_HAJI')
+                          ? ['bg' => 'bg-purple-50', 'text' => 'text-purple-900', 'ring' => 'ring-purple-200', 'label' => 'Bimbingan Haji']
+                          : ['bg' => 'bg-orange-50', 'text' => 'text-orange-900', 'ring' => 'ring-orange-200', 'label' => 'Umroh'];
+                      @endphp
+                      <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $typeBadge['bg'] }} {{ $typeBadge['text'] }} ring-1 ring-inset {{ $typeBadge['ring'] }}">
+                        {{ $typeBadge['label'] ?? '-' }}
+                      </span>
                     </div>
                   </div>
                   <div class="mt-4">

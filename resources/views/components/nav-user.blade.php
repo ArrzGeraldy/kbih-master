@@ -1,22 +1,18 @@
-   <nav class="border-b border-black">
-      <div
-        class="max-w-[90%] md:max-w-3xl lg:max-w-6xl mx-auto flex items-center justify-between py-2 w-full"
-      >
-        <a href="/" class="text-2xl font-medium">Logo</a>
+ <header class="border-b border-slate-200 bg-white/80 backdrop-blur">
+      <div class="max-w-[90%] md:max-w-5xl mx-auto flex items-center justify-between py-4">
+        <a href="/" class="text-2xl font-semibold tracking-tight">KBIH <span class="text-green-600">Care</span></a>
 
-        <ul class="flex items-center gap-4">
+        <nav class="hidden md:flex items-center gap-6 text-sm text-slate-700">
           @auth
-            <li>
-              <a href="{{ route('dashboard') }}" class="hover:text-gray-600 transition-colors">Dashboard</a>
-            </li>
+            <a href="{{ route('dashboard') }}" class="hover:text-slate-900 font-medium text-green-700">Dashboard</a>
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+              @csrf
+              <button type="submit" class="font-medium inline-flex items-center px-4 py-2 rounded-md bg-red-600 text-white shadow-sm hover:bg-red-500">Logout</button>
+            </form>
           @else
-            <li>
-              <a href="{{ route('login') }}" class="hover:text-gray-600 transition-colors">Login</a>
-            </li>
-            <li>
-              <a href="{{ route('register') }}" class="text-white bg-green-600 px-4 py-2 text-sm rounded-md font-medium transition-colors">Sign Up</a>
-            </li>
+            <a href="{{ route('login') }}" class="hover:text-slate-900">Login</a>
+            <a href="{{ route('register') }}" class="inline-flex items-center px-4 py-2 rounded-md bg-green-600 text-white shadow-sm hover:bg-green-500">Daftar</a>
           @endauth
-        </ul>
+        </nav>
       </div>
-    </nav>
+    </header>

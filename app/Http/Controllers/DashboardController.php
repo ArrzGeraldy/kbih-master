@@ -67,6 +67,23 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        return view('user.dashboard', compact('orders'));
+        $totalOrders = $orders->count();
+        $totalPaid = $orders->sum(fn ($order) => (int) $order->total_dibayar);
+        $totalOutstanding = $orders->sum(fn ($order) => max(0, (int) $order->total_tagihan - (int) $order->total_dibayar));
+        $activeOrders = $orders->where('status', 'active')->count();
+
+        $paketRecommendations = Paket::query()
+            ->latest()
+            ->limit(3)
+            ->get();
+
+        return view('user.dashboard', compact(
+            'orders',
+            'totalOrders',
+            'totalPaid',
+            'totalOutstanding',
+            'activeOrders',
+            'paketRecommendations'
+        ));
     }
 }

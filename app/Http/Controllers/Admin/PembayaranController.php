@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\KelasBimbingan;
 use App\Models\Order;
 use App\Models\Pembayaran;
+use App\Models\OrderBimbinganDetail;
+use App\Models\OrderUmrohDetail;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -147,7 +150,7 @@ class PembayaranController extends Controller
             )
             ->whereKey($id)
             ->firstOrFail();
-
+        
         $payload = $request->all();
         $midtransOrderId = (string) ($payload['order_id'] ?? '');
         if ($midtransOrderId === '') {
@@ -194,6 +197,35 @@ class PembayaranController extends Controller
 
         if ($newTotalDibayar === (int) $order->harga_snapshot) {
             $orderUpdate['status'] = 'done';
+
+            $kelasBimbinganId = KelasBimbingan::query()
+                ->where('paket_id', $order->paket_id)
+                ->where('mulai_periode', '<=', Carbon::create(now()->year, 8, 1)->toDateString())
+                ->orderBy('mulai_periode')
+                ->value('id');
+
+            if ($kelasBimbinganId) {
+                // Reload relations to be safe
+                $order->load(['paket', 'orderBimbinganDetail', 'orderUmrohDetail']);
+
+                if (optional($order->paket)->type === 'BIMBINGAN_HAJI') {
+                    if ($order->orderBimbinganDetail) {
+                        $order->orderBimbinganDetail()->update(['kelas_bimbingan_id' => $kelasBimbinganId]);
+                    }
+                    // Do not create a bimbingan detail here because `nomor_porsi` is required by migration.
+                } elseif (optional($order->paket)->type === 'UMROH') {
+                    if ($order->orderUmrohDetail) {
+                        $order->orderUmrohDetail()->update(['kelas_bimbingan_id' => $kelasBimbinganId]);
+                    } else {
+                        // create minimal umroh detail if missing (tanggal_keberangkatan nullable)
+                        OrderUmrohDetail::create([
+                            'order_id' => $order->id,
+                            'kelas_bimbingan_id' => $kelasBimbinganId,
+                            'tanggal_keberangkatan' => null,
+                        ]);
+                    }
+                }
+            }
         }
 
         $order->update($orderUpdate);

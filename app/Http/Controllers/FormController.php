@@ -72,17 +72,17 @@ class FormController extends Controller
                 'total_dibayar' => 0,
             ]);
 
-            $kelasBimbinganId = KelasBimbingan::query()
-                ->where('paket_id', $paket->id)
-                ->where('mulai_periode', '<=', Carbon::create(now()->year, 8, 1)->toDateString())
-                ->orderBy('mulai_periode')
-                ->value('id');
+            // $kelasBimbinganId = KelasBimbingan::query()
+            //     ->where('paket_id', $paket->id)
+            //     ->where('mulai_periode', '<=', Carbon::create(now()->year, 8, 1)->toDateString())
+            //     ->orderBy('mulai_periode')
+            //     ->value('id');
 
 
             OrderBimbinganDetail::create([
                 'order_id' => $order->id,
                 'nomor_porsi' => $validated['nomor_porsi'],
-                'kelas_bimbingan_id' => $kelasBimbinganId,
+                'kelas_bimbingan_id' => null,
             ]);
 
             $dokumenMap = [

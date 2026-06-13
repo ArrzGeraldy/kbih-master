@@ -10,11 +10,12 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SesiBimbinganController;
+use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/',[HomeController::class, 'index']);
+Route::get('/',[HomeController::class, 'index'])->name('home');
 
-Route::prefix('admin')
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin')
     ->name('admin.')
     ->group(function () {
         // dashboard
@@ -31,6 +32,10 @@ Route::prefix('admin')
         // orders
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('/orders/{order}/edit-bimbingan', [OrderController::class, 'editBimbingan'])->name('orders.edit-bimbingan');
+        Route::put('/orders/{order}/edit-bimbingan', [OrderController::class, 'updateBimbingan'])->name('orders.update-bimbingan');
+        Route::get('/orders/{order}/edit-umroh', [OrderController::class, 'editUmroh'])->name('orders.edit-umroh');
+        Route::put('/orders/{order}/edit-umroh', [OrderController::class, 'updateUmroh'])->name('orders.update-umroh');
 
         // dokumen jamaah
         Route::patch('/dokumen/{dokumen}', [DokumenController::class, 'update'])->name('dokumen.update');

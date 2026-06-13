@@ -109,7 +109,6 @@
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Order</th>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Jamaah</th>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Paket</th>
-                      <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">No. Porsi</th>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Status</th>
                       <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">Tagihan</th>
                       <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">Dibuat</th>
@@ -131,9 +130,7 @@
                           <div class="font-medium text-gray-900">{{ optional($order->paket)->nama_paket ?? '-' }}</div>
                           <div class="text-xs text-gray-500">{{ optional($order->paket)->type ?? '-' }}</div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-700">
-                          {{ optional($order->orderBimbinganDetail)->nomor_porsi ?? '-' }}
-                        </td>
+              
                         <td class="px-6 py-4">
                           @php
                             $status = $order->status;
@@ -158,13 +155,29 @@
                         </td>
 
                         <td class="px-6 py-4">
-                          <div class="flex items-center justify-end">
+                          <div class="flex items-center justify-end gap-2">
                             <a
                               href="{{ route('admin.orders.show', $order) }}"
                               class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                               Detail
                             </a>
+                            @if (optional($order->paket)->type === 'BIMBINGAN_HAJI')
+                              <a
+                                href="{{ route('admin.orders.edit-bimbingan', $order) }}"
+                                class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                              >
+                                Edit
+                              </a>
+                            @elseif (optional($order->paket)->type === 'UMROH')
+                              <a
+                                href="{{ route('admin.orders.edit-umroh', $order) }}"
+                                class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                              >
+                                Edit
+                              </a>
+                            @endif
+                       
                           </div>
                         </td>
                       </tr>
