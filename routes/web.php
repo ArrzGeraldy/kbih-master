@@ -64,6 +64,9 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'dashboardUser'])->name('dashboard');
 
+    // document
+    Route::put('/document/{id}',[DokumenController::class, 'updateUser'])->name('user.document-update');
+    
     // order detail
     Route::get('/order/{id}',[OrderController::class, 'showUser']);
 

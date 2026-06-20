@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('tempat_lahir');
             $table->date('tanggal_lahir');
             $table->string('no_tlpn', 20);
+            $table->string('no_darurat', 20);
             $table->text('alamat');
 
             $table->enum('status', ['pending', 'reject', 'verify'])->default('pending');

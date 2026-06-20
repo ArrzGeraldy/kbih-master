@@ -21,6 +21,7 @@ class Jamaah extends Model
         'tempat_lahir',
         'tanggal_lahir',
         'no_tlpn',
+        'no_darurat',
         'alamat',
         'status',
     ];

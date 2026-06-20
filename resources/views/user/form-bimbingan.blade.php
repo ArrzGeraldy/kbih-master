@@ -116,8 +116,8 @@
                   required
                 >
                   <option value="">-- Pilih --</option>
-                  <option value="L" @selected(old('jenis_kelamin') === 'L')>Laki-laki</option>
-                  <option value="P" @selected(old('jenis_kelamin') === 'P')>Perempuan</option>
+                  <option value="L" @selected(old('jenis_kelamin') === 'Laki-Laki')>Laki-laki</option>
+                  <option value="P" @selected(old('jenis_kelamin') === 'Perempuan')>Perempuan</option>
                 </select>
                 @error('jenis_kelamin')
                   <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
@@ -148,6 +148,20 @@
                   name="no_tlpn"
                   type="text"
                   value="{{ old('no_tlpn') }}"
+                  class="mt-1 block w-full rounded border-gray-300 focus:border-green-900 focus:ring-green-900"
+                  required
+                />
+                @error('no_tlpn')
+                  <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+              </div>
+              <div>
+                <label class="block text-sm font-medium" for="no_darurat">No. Telepon Darurat</label>
+                <input
+                  id="no_darurat"
+                  name="no_darurat"
+                  type="text"
+                  value="{{ old('no_darurat') }}"
                   class="mt-1 block w-full rounded border-gray-300 focus:border-green-900 focus:ring-green-900"
                   required
                 />
@@ -224,7 +238,7 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium" for="dok_surat_nikah">Surat Nikah</label>
+                <label class="block text-sm font-medium" for="dok_surat_nikah">Surat Nikah / Akte Lahir</label>
                 <input id="dok_surat_nikah" name="dok_surat_nikah" type="file" class="mt-1 block w-full" required />
                 @error('dok_surat_nikah')
                   <p class="text-sm text-red-600 mt-1">{{ $message }}</p>

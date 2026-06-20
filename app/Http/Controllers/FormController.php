@@ -35,6 +35,7 @@ class FormController extends Controller
             'tempat_lahir' => ['required', 'string', 'max:255'],
             'tanggal_lahir' => ['required', 'date'],
             'no_tlpn' => ['required', 'string', 'max:20'],
+            'no_darurat' => ['required', 'string', 'max:20'],
             'alamat' => ['required', 'string'],
 
             'nomor_porsi' => ['required', 'string', 'max:255'],
@@ -57,6 +58,7 @@ class FormController extends Controller
                 'tempat_lahir' => $validated['tempat_lahir'],
                 'tanggal_lahir' => $validated['tanggal_lahir'],
                 'no_tlpn' => $validated['no_tlpn'],
+                'no_darurat' => $validated['no_darurat'],
                 'alamat' => $validated['alamat'],
                 'status' => 'pending',
             ]);
@@ -127,15 +129,17 @@ class FormController extends Controller
             'tempat_lahir' => ['required', 'string', 'max:255'],
             'tanggal_lahir' => ['required', 'date'],
             'no_tlpn' => ['required', 'string', 'max:20'],
+            'no_darurat' => ['required', 'string', 'max:20'],
+
             'alamat' => ['required', 'string'],
 
             'tanggal_keberangkatan' => ['nullable', 'date'],
 
-            'dok_ktp' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf'],
-            'dok_kk' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf'],
-            'dok_surat_nikah' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf'],
-            'dok_foto' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf'],
-            'dok_passport' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,pdf'],
+            'dok_ktp' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png'],
+            'dok_kk' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png'],
+            'dok_surat_nikah' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png'],
+            'dok_foto' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png'],
+            'dok_passport' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png'],
         ]);
 
         $userId = (int) $request->user()->id;
@@ -149,6 +153,7 @@ class FormController extends Controller
                 'tempat_lahir' => $validated['tempat_lahir'],
                 'tanggal_lahir' => $validated['tanggal_lahir'],
                 'no_tlpn' => $validated['no_tlpn'],
+                'no_darurat' => $validated['no_darurat'],
                 'alamat' => $validated['alamat'],
                 'status' => 'pending',
             ]);

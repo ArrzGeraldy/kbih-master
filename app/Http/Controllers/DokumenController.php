@@ -7,6 +7,8 @@ use App\Models\DocumentJamaah;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class DokumenController extends Controller
 {
@@ -52,5 +54,44 @@ class DokumenController extends Controller
         ]);
 
         return back()->with('success', 'Dokumen berhasil ditolak.');
+    }
+
+
+    public function updateUser(Request $request, $id)
+    {
+        // 1. Validasi file gambar (Maksimal 5MB)
+        $request->validate([
+            'dok' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png'],
+        ]);
+
+        try {
+            // 2. Cari data dokumen berdasarkan ID
+            $document = DocumentJamaah::findOrFail($id);
+
+            // 3. Proses upload file baru
+            if ($request->hasFile('dok')) {
+                // (Opsional) Hapus file lama di storage agar tidak memenuhi server
+                if ($document->dok && Storage::disk('public')->exists($document->dok)) {
+                    Storage::disk('public')->delete($document->dok);
+                }
+
+                // Simpan file baru ke folder 'dokumen_jamaah' di disk public
+                $filePath = $request->file('dok')->store('dokumen_jamaah', 'public');
+            }
+
+            // 4. Update data ke database
+            $document->update([
+                'dok' => $filePath ?? $document->dok,
+                'status' => 'proses', // Ubah status kembali ke pending agar bisa dicek admin lagi
+                'alasan_penolakan' => null // Hapus alasan penolakan yang lama
+            ]);
+
+            return redirect()->back()->with('success', 'Dokumen berhasil di-upload ulang dan sedang ditinjau.');
+
+        } catch (\Exception $e) {
+            Log::error('Gagal upload ulang dokumen: ' . $e->getMessage());
+            
+            return redirect()->back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data.']);
+        }
     }
 }

@@ -86,6 +86,10 @@
                     <p class="text-base font-medium text-slate-900">{{ optional($order->jamaah)->no_tlpn ?? '-' }}</p>
                   </div>
                   <div class="space-y-2 rounded-2xl bg-slate-50 p-4">
+                    <p class="text-sm text-slate-500">No. Darurat</p>
+                    <p class="text-base font-medium text-slate-900">{{ optional($order->jamaah)->no_darurat ?? '-' }}</p>
+                  </div>
+                  <div class="space-y-2 rounded-2xl bg-slate-50 p-4">
                     <p class="text-sm text-slate-500">Tempat, Tanggal Lahir</p>
                     <p class="text-base font-medium text-slate-900">{{ optional($order->jamaah)->tempat_lahir ?? '-' }}, {{ optional(optional($order->jamaah)->tanggal_lahir)->format('d M Y') ?? '-' }}</p>
                   </div>
@@ -141,7 +145,7 @@
                   $dokumenLabels = [
                     'ktp' => 'KTP',
                     'kk' => 'KK',
-                    'surat_nikah' => 'Surat Nikah',
+                    'surat_nikah' => 'Surat Nikah / Akte Lahir',
                     'foto' => 'Foto',
                     'passport' => 'Passport',
                   ];
@@ -193,6 +197,42 @@
                         <div class="mt-3 rounded-2xl bg-red-50 p-3 text-sm text-red-700">
                           <span class="font-semibold">Alasan penolakan:</span> {{ $dok->alasan_penolakan }}
                         </div>
+                        <form 
+      action="{{ route('user.document-update', $dok->id) }}" 
+      method="POST" 
+      enctype="multipart/form-data"
+      class="space-y-4"
+    >
+      @csrf
+      @method('PUT') {{-- Biasanya menggunakan PUT/PATCH untuk update data --}}
+
+      <div>
+        <label class="block text-sm font-medium text-secondary-700 mb-2">
+          Upload Ulang Dokumen (Gambar) <span class="text-red-500">*</span>
+        </label>
+        
+        <input 
+          type="file" 
+          name="dok" 
+          accept="image/*"
+          required
+          class="block w-full text-sm text-secondary-500 border border-secondary-300 rounded-lg 
+                 file:mr-4 file:py-2 file:px-4
+                 file:rounded-l-lg file:border-0
+                 file:text-sm file:font-medium
+                 file:bg-gray-200 file:text-gray-700
+                 hover:file:bg-gray-100
+                 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded-md font-medium transition-all w-full sm:w-fit"
+      >
+        Kirim Dokumen Ulang
+      </button>
+    </form>
                       @endif
                     </div>
                   @endforeach
@@ -246,38 +286,65 @@
                 @endif
 
                 <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-5">
-                  <div class="flex items-center justify-between gap-3">
-                    <div>
-                      <p class="text-sm text-slate-500">Cicilan</p>
-                      <p class="mt-2 text-base font-semibold text-slate-900">Bayar secara fleksibel</p>
-                    </div>
-                    <a href="{{ route('order.pembayaran.history', $order->id) }}" class="text-sm font-semibold text-green-700 hover:text-green-600">Riwayat</a>
-                  </div>
+  <div class="flex items-center justify-between gap-3">
+    <div>
+      <p class="text-sm text-slate-500">Cicilan</p>
+      <p class="mt-2 text-base font-semibold text-slate-900">Bayar secara fleksibel</p>
+    </div>
+    <a href="{{ route('order.pembayaran.history', $order->id) }}" class="text-sm font-semibold text-green-700 hover:text-green-600">Riwayat</a>
+  </div>
 
-                  @if($order->status !== 'done')
-                    <div class="mt-5 space-y-3">
-                      <label for="cicilanAmount" class="text-sm font-medium text-slate-700">Nominal cicilan (Rp)</label>
-                      <input
-                        type="number"
-                        inputmode="numeric"
-                        id="cicilanAmount"
-                        min="1"
-                        class="mt-2 block w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-200"
-                        placeholder="1000000"
-                      />
-                      <button
-                        type="button"
-                        id="payCicilanBtn"
-                        class="inline-flex w-full items-center justify-center rounded-full bg-green-700 px-4 py-3 text-sm font-semibold text-white hover:bg-green-600"
-                      >
-                        Bayar Cicilan
-                      </button>
-                      <p class="text-xs text-slate-500">Cicilan hanya dapat dibayar jika DP sudah <span class="font-semibold">verify</span>.</p>
-                    </div>
-                  @else
-                    <div class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">Order sudah selesai, tidak ada cicilan yang dapat dibayar.</div>
-                  @endif
-                </div>
+  @if($order->status !== 'done')
+    <div class="mt-5 space-y-3">
+      <label for="cicilanAmount" class="text-sm font-medium text-slate-700">Nominal cicilan (Rp)</label>
+      <input
+        type="number"
+        inputmode="numeric"
+        id="cicilanAmount"
+        min="1"
+        class="mt-2 block w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-green-600 focus:outline-none focus:ring-2 focus:ring-green-200"
+        placeholder="1000000"
+      />
+
+      <div class="flex gap-2">
+        <button 
+          type="button" 
+          onclick="addAmount(500000)"
+          class="flex-1 py-1.5 px-3 text-xs font-medium  bg-green-600 hover:bg-green-700 rounded-xl  transition-all text-white"
+        >
+          +500 Ribu
+        </button>
+        <button 
+          type="button" 
+          onclick="addAmount(1000000)"
+          class="flex-1 py-1.5 px-3 text-xs font-medium  bg-green-600 hover:bg-green-700 rounded-xl 200 transition-all text-white"
+        >
+          +1 Juta
+        </button>
+      </div>
+
+      <button
+        type="button"
+        id="payCicilanBtn"
+        class="inline-flex w-full items-center justify-center rounded-full bg-green-700 px-4 py-3 text-sm font-semibold text-white hover:bg-green-600"
+      >
+        Bayar Cicilan
+      </button>
+      <p class="text-xs text-slate-500">Cicilan hanya dapat dibayar jika DP sudah <span class="font-semibold">verify</span>.</p>
+    </div>
+  @else
+    <div class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">Order sudah selesai, tidak ada cicilan yang dapat dibayar.</div>
+  @endif
+</div>
+
+<script>
+  function addAmount(amount) {
+    const input = document.getElementById('cicilanAmount');
+    // Jika input kosong, anggap nilainya 0 lalu tambahkan nilainya
+    const currentVal = parseInt(input.value) || 0;
+    input.value = currentVal + amount;
+  }
+</script>
               </section>
 
               <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

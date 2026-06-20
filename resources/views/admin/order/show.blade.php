@@ -153,6 +153,12 @@
                       </div>
                     </div>
                     <div>
+                      <div class="text-sm text-gray-600">No. Darurat</div>
+                      <div class="mt-1 font-medium text-gray-900">
+                        {{ optional($order->jamaah)->no_darurat ?? '-' }}
+                      </div>
+                    </div>
+                    <div>
                       <div class="text-sm text-gray-600">
                         Tempat, Tanggal Lahir
                       </div>
@@ -238,7 +244,7 @@
                     $dokumenLabels = [
                       'ktp' => 'KTP',
                       'kk' => 'KK',
-                      'surat_nikah' => 'Surat Nikah',
+                      'surat_nikah' => 'Surat Nikah / Akte Lahir',
                       'foto' => 'Foto',
                       'passport' => 'Passport',
                     ];
